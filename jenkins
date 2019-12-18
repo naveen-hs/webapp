@@ -1,0 +1,22 @@
+node{
+    
+    stage("Scm Checkout"){
+       git(credentialsId: 'git-credentials', url: 'https://github.com/naveen-hs/webapp')
+    }
+    stage("maven package"){
+        sh 'mvn clean package'
+    }
+    stage("Build docker image"){
+        sh 'docker build -t naveenhs/webapp .'
+    }
+    stage("Push Docker Image to Docker hub"){
+        withCredentials([string(credentialsId: 'docker-pwd', variable: 'dockerHubPwd')]) {
+        sh 'docker login -u naveenhs -p ${dockerHubPwd}'
+    }
+       sh 'docker push naveenhs/webapp'
+    }
+    stage("Run the container on Tomcat"){
+        sh 'docker run -p 8090:8080 -d naveenhs/webapp'
+    }
+    
+}
